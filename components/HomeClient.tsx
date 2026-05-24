@@ -97,6 +97,16 @@ export function HomeClient() {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-hide updater status toast for completed/errored states after 6 seconds
+  useEffect(() => {
+    if (updaterStatus === "not-available" || updaterStatus === "error") {
+      const timer = setTimeout(() => {
+        setUpdaterStatus("idle");
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [updaterStatus]);
+
   // Admin PIN Session Login
   async function handleAdminLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -614,7 +624,7 @@ export function HomeClient() {
                 {updaterStatus === "not-available" && "App Up to Date"}
               </h4>
               
-              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed break-all max-h-32 overflow-y-auto pr-1">
                 {updaterStatus === "checking" && "Checking remote GitHub packages..."}
                 {updaterStatus === "available" && `Downloading version ${updaterVersion || "latest"}...`}
                 {updaterStatus === "downloading" && `Downloading installation files... (${updaterPercent}%)`}
