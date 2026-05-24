@@ -1,7 +1,48 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { spawn } = require('child_process');
 const { autoUpdater } = require('electron-updater');
+
+// Custom Env File Loader to parse environment variables without third-party dependencies
+function loadEnvFile(envPath) {
+  if (fs.existsSync(envPath)) {
+    console.log(`Loading environment variables from: ${envPath}`);
+    try {
+      const content = fs.readFileSync(envPath, 'utf8');
+      content.split(/\r?\n/).forEach(line => {
+        if (!line || line.trim().startsWith('#')) return;
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+        if (match) {
+          const key = match[1];
+          let value = (match[2] || '').trim();
+          if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+          process.env[key] = value;
+        }
+      });
+    } catch (e) {
+      console.error(`Error parsing env file at ${envPath}:`, e);
+    }
+  }
+}
+
+// Load env files from project roots
+const projectRoot = app.isPackaged 
+  ? path.dirname(path.dirname(path.dirname(process.execPath))) 
+  : app.getAppPath();
+
+loadEnvFile(path.join(projectRoot, '.env'));
+loadEnvFile(path.join(projectRoot, '.env.local'));
+loadEnvFile(path.join(process.cwd(), '.env'));
+loadEnvFile(path.join(process.cwd(), '.env.local'));
+
+console.log('C.O.R.E. Env Initialization:', {
+  hasApiKey: !!process.env.AIRTABLE_API_KEY,
+  hasBaseId: !!process.env.AIRTABLE_BASE_ID,
+  hasAdminPin: !!process.env.ADMIN_PIN
+});
 
 let mainWindow;
 let nextProcess;
