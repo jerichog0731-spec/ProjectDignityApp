@@ -63,9 +63,9 @@ export function ClientOnboarding({ onComplete }: Props) {
   }
 
   return (
-    <section className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <h1 className="text-2xl font-bold text-zinc-900">Welcome to C.O.R.E.</h1>
-      <p className="mt-2 text-sm text-zinc-600">
+    <section className="w-full max-w-md glass-panel p-6 shadow-2xl bg-[#0d1b2a]/30 border border-white/10 backdrop-blur-md rounded-2xl">
+      <h1 className="text-2xl font-bold text-white font-heading">Welcome to C.O.R.E.</h1>
+      <p className="mt-2 text-sm text-zinc-400">
         Enter your first name and household size to receive your digital card
         and QR code.
       </p>
@@ -74,9 +74,9 @@ export function ClientOnboarding({ onComplete }: Props) {
         <div>
           <label
             htmlFor="firstName"
-            className="block text-sm font-medium text-zinc-800"
+            className="block text-sm font-semibold text-zinc-300"
           >
-            First name <span className="text-red-600">*</span>
+            First name <span className="text-[#ff6a00]">*</span>
           </label>
           <input
             id="firstName"
@@ -86,7 +86,7 @@ export function ClientOnboarding({ onComplete }: Props) {
             required
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-white placeholder-zinc-500 focus:border-[#ff6a00]/50 focus:outline-none focus:ring-2 focus:ring-[#ff6a00]/20 transition-all duration-200"
             placeholder="Your first name"
           />
         </div>
@@ -94,9 +94,9 @@ export function ClientOnboarding({ onComplete }: Props) {
         <div>
           <label
             htmlFor="familySize"
-            className="block text-sm font-medium text-zinc-800"
+            className="block text-sm font-semibold text-zinc-300"
           >
-            Family size <span className="text-red-600">*</span>
+            Family size <span className="text-[#ff6a00]">*</span>
           </label>
           <input
             id="familySize"
@@ -106,13 +106,13 @@ export function ClientOnboarding({ onComplete }: Props) {
             required
             value={familySize}
             onChange={(e) => setFamilySize(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-white placeholder-zinc-500 focus:border-[#ff6a00]/50 focus:outline-none focus:ring-2 focus:ring-[#ff6a00]/20 transition-all duration-200"
             placeholder="e.g. 3"
           />
         </div>
 
         {error ? (
-          <p className="text-sm text-red-700" role="alert">
+          <p className="text-sm text-red-400 font-semibold" role="alert">
             {error}
           </p>
         ) : null}
@@ -120,7 +120,7 @@ export function ClientOnboarding({ onComplete }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff6a00] to-[#ffbc00] px-4 py-3 text-sm font-bold text-zinc-950 disabled:opacity-60 cursor-pointer shadow-lg hover:shadow-[#ff6a00]/20 hover:scale-[1.02] active:scale-95 transition-all duration-200"
         >
           {loading ? (
             <>

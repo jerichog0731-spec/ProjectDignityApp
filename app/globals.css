@@ -1,20 +1,133 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f4f5;
-  --foreground: #18181b;
-  --pdh-primary: #1d4ed8;
+  --background: #050c18;
+  --foreground: #f4f7fa;
+  --pdh-primary: #ff6a00;
+  
+  --color-orange: #ff6a00;
+  --color-orange-rgb: 255, 106, 0;
+  --color-gold: #ffbc00;
+  --color-indigo: #0d3873;
+  --color-indigo-rgb: 13, 56, 115;
+  --color-card-bg: rgba(13, 27, 42, 0.45);
+  --color-card-border: rgba(255, 255, 255, 0.08);
+  --color-card-border-hover: rgba(255, 255, 255, 0.18);
+  
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  border-radius: 1.25rem;
+  transition: var(--transition);
+}
+
+.glass-panel:hover {
+  border-color: var(--color-card-border-hover);
+  transform: translateY(-2px);
+}
+
+/* Background mesh gradients */
+.mesh-glow-orange {
+  position: fixed;
+  top: -10%;
+  right: -5%;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(var(--color-orange-rgb), 0.22) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -1;
+  animation: floatAura1 25s infinite alternate ease-in-out;
+}
+
+.mesh-glow-blue {
+  position: fixed;
+  bottom: -15%;
+  left: -5%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(var(--color-indigo-rgb), 0.4) 0%, transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: -1;
+  animation: floatAura2 30s infinite alternate ease-in-out;
+}
+
+/* Custom animation keyframes */
+@keyframes floatAura1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(5%, 10%) scale(1.1); }
+}
+
+@keyframes floatAura2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-5%, -8%) scale(1.15); }
+}
+
+@keyframes logoPulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(var(--color-orange-rgb), 0.2));
+  }
+  50% {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 25px rgba(var(--color-orange-rgb), 0.55));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(var(--color-orange-rgb), 0.2));
+  }
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.15); }
+  100% { opacity: 0.35; transform: scale(1); }
+}
+
+@keyframes spinnerRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-logo-pulse {
+  animation: logoPulse 2.5s infinite ease-in-out;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2.5s infinite ease-in-out;
+}
+
+.animate-spinner-rotate {
+  animation: spinnerRotate 3s infinite linear;
+}
+
+/* Custom Titlebar padding helper */
+body:has(.style-drag-region) .electron-only-pt {
+  padding-top: 2.25rem; /* 36px offset */
 }

@@ -52,46 +52,49 @@ export function ClientCard({ clientId }: Props) {
 
   return (
     <section className="w-full max-w-md space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-zinc-900">Your digital card</h1>
+      <header className="text-center md:text-left">
+        <h1 className="text-2xl font-bold text-white font-heading">Your digital card</h1>
         {client ? (
-          <p className="mt-1 text-sm text-zinc-600">
-            Hi {client.FirstName} — household of {client.FamilySize}
+          <p className="mt-1.5 text-sm text-zinc-300">
+            Hi <span className="font-semibold text-[#ff6a00]">{client.FirstName}</span> — household of {client.FamilySize}
           </p>
         ) : null}
-        <p className="mt-1 font-mono text-xs text-zinc-500">{clientId}</p>
+        <p className="mt-1 font-mono text-xs text-zinc-500 tracking-wider uppercase">{clientId}</p>
       </header>
 
-      <div className="flex justify-center rounded-2xl border border-zinc-200 bg-white p-6">
+      <div className="flex justify-center rounded-2xl border border-white/10 bg-white p-6 shadow-2xl transition-transform hover:scale-[1.01]">
         <QRCodeSVG value={cardUrl} size={200} level="M" includeMargin />
       </div>
 
-      <p className="text-center text-xs text-zinc-500">
-        Show this code to a volunteer at pickup.
+      <p className="text-center text-xs text-zinc-400">
+        Show this QR code to a volunteer at pickup.
       </p>
 
       {error ? (
-        <p className="text-sm text-amber-800" role="alert">
-          {error} (QR still works offline with your ID.)
+        <p className="text-sm text-amber-400 text-center font-medium bg-amber-500/10 border border-amber-500/20 rounded-xl p-3" role="alert">
+          {error} (Offline mode active: QR contains your ID.)
         </p>
       ) : null}
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-zinc-800">
+      <div className="rounded-2xl border border-white/10 bg-[#0d1b2a]/30 backdrop-blur-md p-5 shadow-xl">
+        <h2 className="text-sm font-semibold text-white font-heading tracking-wide uppercase">
           Resource status
         </h2>
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="mt-1 text-xs text-zinc-400">
           Full eligibility (Step 2) uses the rules below from config.
         </p>
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-3">
           {RESOURCE_DEFINITIONS.map((resource) => (
             <li
               key={resource.id}
-              className="flex items-center justify-between text-sm text-zinc-700"
+              className="flex items-center justify-between text-sm text-zinc-300 border-b border-white/5 pb-2 last:border-0 last:pb-0"
             >
-              <span>{resource.label}</span>
-              <span className="text-xs text-zinc-500">
-                every {resource.cooldownDays}d
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff6a00]" />
+                {resource.label}
+              </span>
+              <span className="text-xs text-zinc-500 font-mono">
+                every {resource.cooldownDays} days
               </span>
             </li>
           ))}
