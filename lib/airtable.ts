@@ -1,86 +1,80 @@
-import { getAirtableConfig } from "@/lib/config/env";
+import fs from "fs";
+import path from "path";
 import type { ClientRecord } from "@/lib/types";
 
-type AirtableFields = Record<string, unknown>;
-
-type AirtableRecord<T> = {
-  id: string;
-  fields: T;
-  createdTime?: string;
+// Local Database Structure
+type Database = {
+  clients: ClientRecord[];
+  transactions: any[];
 };
 
-type AirtableListResponse<T> = {
-  records: AirtableRecord<T>[];
-};
-
-function baseUrl(tableName: string): string {
-  const { baseId } = getAirtableConfig();
-  return `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`;
-}
-
-async function airtableRequest<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
-  const { apiKey } = getAirtableConfig();
-  const response = await fetch(path, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Airtable error ${response.status}: ${body}`);
+// Locate the local-first database file path in AppData Roaming folder
+function getDbPath(): string {
+  const appData =
+    process.env.APPDATA ||
+    (process.platform === "darwin"
+      ? process.env.HOME + "/Library/Application Support"
+      : process.env.HOME + "/.config");
+  
+  const dir = path.join(appData, "project-dignity-core");
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
-
-  return response.json() as Promise<T>;
+  return path.join(dir, "db.json");
 }
 
-function mapClientFields(fields: AirtableFields): ClientRecord {
-  return {
-    ClientID: String(fields.ClientID ?? ""),
-    FirstName: String(fields.FirstName ?? ""),
-    FamilySize: Number(fields.FamilySize ?? 0),
-    LastHygieneDate: (fields.LastHygieneDate as string | null) ?? null,
-    LastLaundryDate: (fields.LastLaundryDate as string | null) ?? null,
-    LastCleaningDate: (fields.LastCleaningDate as string | null) ?? null,
-    LastSpecialDate: (fields.LastSpecialDate as string | null) ?? null,
-  };
+// Read database helper
+function readDb(): Database {
+  const dbPath = getDbPath();
+  if (!fs.existsSync(dbPath)) {
+    const defaultDb: Database = { clients: [], transactions: [] };
+    fs.writeFileSync(dbPath, JSON.stringify(defaultDb, null, 2), "utf8");
+    return defaultDb;
+  }
+  try {
+    const data = fs.readFileSync(dbPath, "utf8");
+    return JSON.parse(data) as Database;
+  } catch (e) {
+    console.error("Failed to read local DB, resetting to empty:", e);
+    return { clients: [], transactions: [] };
+  }
+}
+
+// Write database helper
+function writeDb(db: Database) {
+  const dbPath = getDbPath();
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), "utf8");
+  } catch (e) {
+    console.error("Failed to write to local DB:", e);
+  }
 }
 
 export async function createClientRecord(
   client: ClientRecord,
 ): Promise<ClientRecord> {
-  const { clientsTable } = getAirtableConfig();
-  const data = await airtableRequest<AirtableRecord<AirtableFields>>(
-    baseUrl(clientsTable),
-    {
-      method: "POST",
-      body: JSON.stringify({
-        fields: {
-          ClientID: client.ClientID,
-          FirstName: client.FirstName,
-          FamilySize: client.FamilySize,
-        },
-      }),
-    },
-  );
-  return mapClientFields(data.fields);
+  const db = readDb();
+  
+  // Format the client record
+  const newClient: ClientRecord = {
+    ClientID: client.ClientID,
+    FirstName: client.FirstName,
+    FamilySize: client.FamilySize,
+    LastHygieneDate: client.LastHygieneDate ?? null,
+    LastLaundryDate: client.LastLaundryDate ?? null,
+    LastCleaningDate: client.LastCleaningDate ?? null,
+    LastSpecialDate: client.LastSpecialDate ?? null,
+  };
+
+  db.clients.push(newClient);
+  writeDb(db);
+  return newClient;
 }
 
 export async function getClientByClientId(
   clientId: string,
 ): Promise<ClientRecord | null> {
-  const { clientsTable } = getAirtableConfig();
-  const formula = encodeURIComponent(`{ClientID}='${clientId.replace(/'/g, "\\'")}'`);
-  const data = await airtableRequest<AirtableListResponse<AirtableFields>>(
-    `${baseUrl(clientsTable)}?filterByFormula=${formula}&maxRecords=1`,
-  );
-  const record = data.records[0];
-  if (!record) return null;
-  return mapClientFields(record.fields);
+  const db = readDb();
+  const client = db.clients.find((c) => c.ClientID === clientId);
+  return client ?? null;
 }
