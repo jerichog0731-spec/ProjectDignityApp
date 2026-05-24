@@ -18,33 +18,60 @@ function startNextServer() {
 
     console.log('Running in Production mode. Launching local Next.js server...');
     const nextBin = path.join(app.getAppPath(), 'node_modules', 'next', 'dist', 'bin', 'next');
-    
-    // Start Next.js start script
-    nextProcess = spawn(process.execPath, [nextBin, 'start', '-p', PORT.toString()], {
-      cwd: app.getAppPath(),
-      env: {
-        ...process.env,
-        NODE_ENV: 'production',
-        PORT: PORT.toString()
+    let resolved = false;
+
+    const finish = (url) => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(fallbackTimeout);
+        resolve(url);
       }
-    });
+    };
 
-    nextProcess.stdout.on('data', (data) => {
-      const output = data.toString();
-      console.log(`[NextServer]: ${output}`);
-      if (output.includes('Ready') || output.includes('started') || output.includes('localhost')) {
-        resolve(`http://localhost:${PORT}`);
-      }
-    });
+    // Fallback: If local server doesn't respond in 6s, load the online website
+    const fallbackTimeout = setTimeout(() => {
+      console.log('Local server timeout. Falling back to official hosted website.');
+      finish('https://projectdignityhobbs.org');
+    }, 6000);
 
-    nextProcess.stderr.on('data', (data) => {
-      console.error(`[NextServer Error]: ${data.toString()}`);
-    });
+    try {
+      // Wrap path in quotes to prevent spaces from breaking Windows shell spawn
+      nextProcess = spawn('node', [`"${nextBin}"`, 'start', '-p', PORT.toString()], {
+        cwd: app.getAppPath(),
+        shell: true,
+        env: {
+          ...process.env,
+          NODE_ENV: 'production',
+          PORT: PORT.toString()
+        }
+      });
 
-    // Resolve as fallback after 5 seconds anyway
-    setTimeout(() => {
-      resolve(`http://localhost:${PORT}`);
-    }, 5000);
+      nextProcess.on('error', (err) => {
+        console.error('Failed to spawn Next.js process, falling back to website:', err);
+        finish('https://projectdignityhobbs.org');
+      });
+
+      nextProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        console.log(`[NextServer]: ${output}`);
+        if (output.includes('Ready') || output.includes('started') || output.includes('localhost')) {
+          finish(`http://localhost:${PORT}`);
+        }
+      });
+
+      nextProcess.stderr.on('data', (data) => {
+        console.error(`[NextServer Error]: ${data.toString()}`);
+      });
+
+      nextProcess.on('close', (code) => {
+        console.log(`Next.js server process closed with code ${code}. Falling back to website.`);
+        finish('https://projectdignityhobbs.org');
+      });
+
+    } catch (e) {
+      console.error('Exception starting Next.js server, falling back to website:', e);
+      finish('https://projectdignityhobbs.org');
+    }
   });
 }
 
