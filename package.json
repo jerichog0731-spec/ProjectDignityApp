@@ -39,6 +39,7 @@
   "build": {
     "appId": "com.projectdignityhobbs.app",
     "productName": "Project Dignity Hobbs C.O.R.E.",
+    "asar": false,
     "directories": {
       "output": "dist"
     },

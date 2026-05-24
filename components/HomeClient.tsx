@@ -274,6 +274,14 @@ export function HomeClient() {
             <div className="font-heading text-2xl font-bold tracking-wider text-white mb-1">
               {loadingProgress}%
             </div>
+            <div className="text-[10px] text-zinc-400 font-semibold mb-4 uppercase tracking-wider min-h-[16px] transition-all duration-300">
+              {loadingProgress < 20 && "Initializing local database..."}
+              {loadingProgress >= 20 && loadingProgress < 45 && "Loading C.O.R.E. desktop environment..."}
+              {loadingProgress >= 45 && loadingProgress < 70 && "Establishing secure local server connection..."}
+              {loadingProgress >= 70 && loadingProgress < 90 && "Checking for background software updates..."}
+              {loadingProgress >= 90 && loadingProgress < 100 && "Configuring glassmorphism panels..."}
+              {loadingProgress >= 100 && "C.O.R.E. Online"}
+            </div>
             <div className="text-[11px] font-semibold text-[#ff6a00] tracking-widest uppercase">
               Restoring Dignity to Hobbs, NM
             </div>

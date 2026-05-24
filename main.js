@@ -65,84 +65,125 @@ let nextProcess;
 const PORT = 3000;
 
 async function startNextServer() {
+  console.log('[C.O.R.E. Breadcrumb] Checking if port ' + PORT + ' is in use...');
   const inUse = await isPortInUse(PORT);
   if (inUse) {
-    console.log(`Port ${PORT} is already in use. Connecting directly without starting a new server.`);
+    console.log(`[C.O.R.E. Breadcrumb] Port ${PORT} is already in use. Connecting directly without starting a new server.`);
     return `http://localhost:${PORT}`;
   }
 
   return new Promise((resolve) => {
     if (!app.isPackaged) {
-      // In dev mode, assume Next.js is running via 'npm run dev'
-      console.log('Running in Development mode. Connecting to existing Next.js server.');
+      console.log('[C.O.R.E. Breadcrumb] Running in Development mode. Connecting to existing Next.js server.');
       resolve(`http://localhost:${PORT}`);
       return;
     }
 
-    console.log('Running in Production mode. Launching local Next.js server...');
+    console.log('[C.O.R.E. Breadcrumb] Running in Production mode. Launching local Next.js server...');
     const nextBin = path.join(app.getAppPath(), 'node_modules', 'next', 'dist', 'bin', 'next');
     let resolved = false;
 
-    const finish = (url) => {
+    const finish = (url, reason) => {
       if (!resolved) {
         resolved = true;
         clearTimeout(fallbackTimeout);
+        console.log(`[C.O.R.E. Breadcrumb] Resolving main window URL: ${url} (Reason: ${reason})`);
         resolve(url);
       }
     };
 
     // Fallback: If local server doesn't respond in 6s, load the online website
     const fallbackTimeout = setTimeout(() => {
-      console.log('Local server timeout. Falling back to official hosted website.');
-      finish('https://projectdignityhobbs.org');
+      console.log('[C.O.R.E. Breadcrumb] Local server startup timeout. Falling back to official website.');
+      finish('https://projectdignityhobbs.org', 'Startup Timeout');
     }, 6000);
 
     try {
-      // Open/create a next-server.log file in the project root directory
       const logPath = path.join(projectRoot, 'next-server.log');
       const logStream = fs.createWriteStream(logPath, { flags: 'a' });
-      logStream.write(`\n--- Server Launch: ${new Date().toISOString()} ---\n`);
+      
+      const breadcrumb = (msg) => {
+        const timestamped = `[C.O.R.E. Breadcrumb][${new Date().toISOString()}] ${msg}\n`;
+        console.log(msg);
+        logStream.write(timestamped);
+      };
 
-      // Wrap path in quotes to prevent spaces from breaking Windows shell spawn
-      nextProcess = spawn('node', [`"${nextBin}"`, 'start', '-p', PORT.toString()], {
-        cwd: app.getAppPath(),
-        shell: true,
-        env: {
-          ...process.env,
-          NODE_ENV: 'production',
-          PORT: PORT.toString()
+      breadcrumb(`--- Server Launch Init ---`);
+      breadcrumb(`App path: ${app.getAppPath()}`);
+      breadcrumb(`Next.js Binary: ${nextBin}`);
+      breadcrumb(`Exec path: ${process.execPath}`);
+
+      // Prepare env
+      const env = {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: '1',
+        NODE_ENV: 'production',
+        PORT: PORT.toString()
+      };
+
+      // Enrich Windows PATH and SystemRoot
+      if (process.platform === 'win32') {
+        const systemPaths = [
+          'C:\\Windows\\system32',
+          'C:\\Windows',
+          'C:\\Windows\\System32\\Wbem',
+          'C:\\Windows\\System32\\WindowsPowerShell\\v1.0'
+        ];
+        const pathKey = Object.keys(env).find(k => k.toLowerCase() === 'path') || 'PATH';
+        const existingPath = env[pathKey] || '';
+        const uniquePaths = systemPaths.filter(p => !existingPath.toLowerCase().includes(p.toLowerCase()));
+        
+        if (uniquePaths.length > 0) {
+          env[pathKey] = existingPath + (existingPath ? ';' : '') + uniquePaths.join(';');
         }
+        if (!env.SystemRoot) {
+          env.SystemRoot = 'C:\\Windows';
+        }
+        breadcrumb(`Enriched Windows environment. PATH variable key used: ${pathKey}`);
+      }
+
+      breadcrumb(`Spawning process: ${process.execPath} with args [${nextBin}, 'start', '-p', '${PORT}']`);
+
+      // Spawn using Electron binary as Node, shell: false to avoid cmd.exe ENOENT
+      nextProcess = spawn(process.execPath, [nextBin, 'start', '-p', PORT.toString()], {
+        cwd: app.getAppPath(),
+        shell: false,
+        env: env
       });
 
+      if (nextProcess.pid) {
+        breadcrumb(`Spawned Next.js server successfully with PID: ${nextProcess.pid}`);
+      }
+
       nextProcess.on('error', (err) => {
-        console.error('Failed to spawn Next.js process, falling back to website:', err);
-        logStream.write(`Failed to spawn Next.js process: ${err.message}\n`);
-        finish('https://projectdignityhobbs.org');
+        breadcrumb(`Failed to spawn Next.js process: ${err.message}`);
+        finish('https://projectdignityhobbs.org', `Spawn Error: ${err.message}`);
       });
 
       nextProcess.stdout.on('data', (data) => {
         const output = data.toString();
         logStream.write(data);
-        console.log(`[NextServer]: ${output}`);
+        console.log(`[NextServer Out]: ${output.trim()}`);
         if (output.includes('Ready') || output.includes('started') || output.includes('localhost')) {
-          finish(`http://localhost:${PORT}`);
+          breadcrumb(`Detected Next.js ready condition in stdout.`);
+          finish(`http://localhost:${PORT}`, 'Ready Output Detected');
         }
       });
 
       nextProcess.stderr.on('data', (data) => {
+        const output = data.toString();
         logStream.write(data);
-        console.error(`[NextServer Error]: ${data.toString()}`);
+        console.error(`[NextServer Err]: ${output.trim()}`);
       });
 
       nextProcess.on('close', (code) => {
-        console.log(`Next.js server process closed with code ${code}. Falling back to website.`);
-        logStream.write(`Next.js server process closed with code ${code}\n`);
-        finish('https://projectdignityhobbs.org');
+        breadcrumb(`Next.js server process closed with exit code: ${code}`);
+        finish('https://projectdignityhobbs.org', `Process Closed (Exit Code ${code})`);
       });
 
     } catch (e) {
-      console.error('Exception starting Next.js server, falling back to website:', e);
-      finish('https://projectdignityhobbs.org');
+      console.error('[C.O.R.E. Breadcrumb] Exception starting Next.js server:', e);
+      finish('https://projectdignityhobbs.org', `Exception: ${e.message}`);
     }
   });
 }
