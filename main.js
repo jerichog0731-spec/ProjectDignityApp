@@ -44,11 +44,33 @@ console.log('C.O.R.E. Env Initialization:', {
   hasAdminPin: !!process.env.ADMIN_PIN
 });
 
+const net = require('net');
+
+function isPortInUse(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once('error', (err) => {
+      resolve(err.code === 'EADDRINUSE');
+    });
+    server.once('listening', () => {
+      server.close();
+      resolve(false);
+    });
+    server.listen(port);
+  });
+}
+
 let mainWindow;
 let nextProcess;
 const PORT = 3000;
 
-function startNextServer() {
+async function startNextServer() {
+  const inUse = await isPortInUse(PORT);
+  if (inUse) {
+    console.log(`Port ${PORT} is already in use. Connecting directly without starting a new server.`);
+    return `http://localhost:${PORT}`;
+  }
+
   return new Promise((resolve) => {
     if (!app.isPackaged) {
       // In dev mode, assume Next.js is running via 'npm run dev'
@@ -76,6 +98,11 @@ function startNextServer() {
     }, 6000);
 
     try {
+      // Open/create a next-server.log file in the project root directory
+      const logPath = path.join(projectRoot, 'next-server.log');
+      const logStream = fs.createWriteStream(logPath, { flags: 'a' });
+      logStream.write(`\n--- Server Launch: ${new Date().toISOString()} ---\n`);
+
       // Wrap path in quotes to prevent spaces from breaking Windows shell spawn
       nextProcess = spawn('node', [`"${nextBin}"`, 'start', '-p', PORT.toString()], {
         cwd: app.getAppPath(),
@@ -89,11 +116,13 @@ function startNextServer() {
 
       nextProcess.on('error', (err) => {
         console.error('Failed to spawn Next.js process, falling back to website:', err);
+        logStream.write(`Failed to spawn Next.js process: ${err.message}\n`);
         finish('https://projectdignityhobbs.org');
       });
 
       nextProcess.stdout.on('data', (data) => {
         const output = data.toString();
+        logStream.write(data);
         console.log(`[NextServer]: ${output}`);
         if (output.includes('Ready') || output.includes('started') || output.includes('localhost')) {
           finish(`http://localhost:${PORT}`);
@@ -101,11 +130,13 @@ function startNextServer() {
       });
 
       nextProcess.stderr.on('data', (data) => {
+        logStream.write(data);
         console.error(`[NextServer Error]: ${data.toString()}`);
       });
 
       nextProcess.on('close', (code) => {
         console.log(`Next.js server process closed with code ${code}. Falling back to website.`);
+        logStream.write(`Next.js server process closed with code ${code}\n`);
         finish('https://projectdignityhobbs.org');
       });
 
