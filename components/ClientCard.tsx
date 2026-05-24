@@ -53,7 +53,7 @@ export function ClientCard({ clientId }: Props) {
   return (
     <section className="w-full max-w-md space-y-6">
       <header className="text-center md:text-left">
-        <h1 className="text-2xl font-bold text-white font-heading">Your digital card</h1>
+        <h1 className="text-2xl font-bold text-white font-heading">Your digital Neighbor card</h1>
         {client ? (
           <p className="mt-1.5 text-sm text-zinc-300">
             Hi <span className="font-semibold text-[#ff6a00]">{client.FirstName}</span> — household of {client.FamilySize}

@@ -66,7 +66,7 @@ export function ClientOnboarding({ onComplete }: Props) {
     <section className="w-full max-w-md glass-panel p-6 shadow-2xl bg-[#0d1b2a]/30 border border-white/10 backdrop-blur-md rounded-2xl">
       <h1 className="text-2xl font-bold text-white font-heading">Welcome to C.O.R.E.</h1>
       <p className="mt-2 text-sm text-zinc-400">
-        Enter your first name and household size to receive your digital card
+        Enter your first name and household size to receive your digital Neighbor card
         and QR code.
       </p>
 
@@ -128,7 +128,7 @@ export function ClientOnboarding({ onComplete }: Props) {
               Creating card…
             </>
           ) : (
-            "Generate My Digital Card"
+            "Generate My Neighbor Card"
           )}
         </button>
       </form>
