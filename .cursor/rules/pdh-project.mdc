@@ -1,0 +1,22 @@
+---
+description: Project Dignity C.O.R.E. mission, phase, and spec pointer
+alwaysApply: true
+---
+
+# Project Dignity Hobbs (C.O.R.E.)
+
+- **Codename:** C.O.R.E. (Community Outreach & Resource Engine)
+- **Product:** Mobile-first PWA for anonymous client resource tracking and volunteer dispensing
+- **Launch target:** June 13, 2026
+- **Full spec:** [docs/PDH-CORE-SPEC.md](../docs/PDH-CORE-SPEC.md)
+- **Agent playbook:** [AGENTS.md](../AGENTS.md)
+
+## Current phase
+
+**Step 1 complete** (Next.js + PWA + Airtable API + required onboarding). Next default work: **Step 2** eligibility and volunteer UI unless the user directs otherwise.
+
+## Design principles
+
+- Trauma-informed, low-barrier, high-contrast mobile UI
+- No client passwords; QR + `ClientID` is the client token
+- Minimize scope; match patterns in [AGENTS.md](../AGENTS.md)

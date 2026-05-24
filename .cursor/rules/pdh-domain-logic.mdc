@@ -1,0 +1,45 @@
+---
+description: PDH eligibility, Airtable schema, dispense and offline queue rules
+globs: app/**,src/**,lib/**
+alwaysApply: false
+---
+
+# PDH domain logic
+
+Reference: [docs/PDH-CORE-SPEC.md](../docs/PDH-CORE-SPEC.md) sections 3–5.
+
+## Eligibility cooldowns (days since last dispense)
+
+| Category | Client field | Days |
+|----------|--------------|------|
+| Hygiene | `LastHygieneDate` | 7 |
+| Laundry | `LastLaundryDate` | 14 |
+| Cleaning | `LastCleaningDate` | 30 |
+| Special | `LastSpecialDate` | 60 |
+
+Green = eligible; red = locked with countdown to next eligible date.
+
+## Dispense
+
+1. Volunteer confirms admin PIN (server-validated session).
+2. Create `Transactions` row: `ClientID`, `Category`, `Timestamp`.
+3. Update matching `Last*Date` on `Clients` to server time.
+
+Emergency bypass: only after privileged PIN confirmation; log bypass in transaction metadata if possible.
+
+## Offline
+
+- Cache static shell routes via service worker.
+- Failed writes → `localStorage` queue with `status: "pending"`.
+- Flush queue in order on `online` via API routes.
+
+## Client onboarding
+
+- No token → form: **First name** (required) + **Family size** (required, ≥ 1).
+- Valid submit → `POST /api/v1/clients` → `ClientID` + QR on card view.
+- Returning clients with `pdh_client_id` in localStorage (or `?client=` URL) skip the form.
+
+## Config-driven resources
+
+- Cooldowns and labels: [lib/config/resources.ts](../../lib/config/resources.ts)
+- Public JSON: `GET /api/v1/config`

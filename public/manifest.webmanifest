@@ -1,0 +1,17 @@
+{
+  "name": "Project Dignity C.O.R.E.",
+  "short_name": "C.O.R.E.",
+  "description": "Community Outreach & Resource Engine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f4f5",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

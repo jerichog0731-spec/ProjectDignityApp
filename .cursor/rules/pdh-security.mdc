@@ -1,0 +1,27 @@
+---
+description: PDH secrets, API boundaries, and anonymous client model
+globs: app/api/**,lib/**
+alwaysApply: false
+---
+
+# PDH security
+
+## Secrets
+
+- `AIRTABLE_API_KEY` and `AIRTABLE_BASE_ID` are server-only.
+- `ADMIN_PIN` is server-only; validate in API route handlers or server actions.
+- Never use `NEXT_PUBLIC_` for Airtable keys or admin PIN.
+
+## API boundary
+
+- Browser calls only same-origin `/api/*` routes.
+- All Airtable HTTP requests live in `lib/airtable` (or equivalent) used from server code only.
+
+## Client identity
+
+- `ClientID` (e.g. `PDH-XXXX`) is the primary key; QR encodes it.
+- No client login, email, or password collection required for core flows.
+
+## Overrides
+
+- Admin bypass of red locks must be authenticated server-side before mutating `Clients` or `Transactions`.
